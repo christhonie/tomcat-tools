@@ -62,8 +62,9 @@ fi
 
 
 
-while getopts ":p:c:w:h" options; do
+while getopts ":t:p:c:w:h" options; do
   case $options in
+    t ) TOMCAT_PATH=$OPTARG ;;
     p ) HPORT=$OPTARG ;;
     c ) CPORT=$OPTARG ;;
     w ) CWORD=$OPTARG ;;
@@ -110,8 +111,16 @@ mkdir -p "${TARGET}"
 
 FULLTARGET=`cd "${TARGET}" > /dev/null && pwd`
 
-SCRIPTDIR=`dirname "$0"`
-TOMCAT_PATH=`cd "$SCRIPTDIR/.." >/dev/null; pwd`
+if [ -z "$TOMCAT_PATH" ]; then
+  SCRIPTDIR=`dirname "$0"`
+  TOMCAT_PATH=`cd "$SCRIPTDIR/.." >/dev/null; pwd`
+  echo "Using $TOMCAT_PATH as Tomcat BASE directory.  Use -t option to override."
+fi
+
+if [ ! -d $TOMCAT_PATH ]; then
+  echo "Error: Tomcat BASE directory not found."
+  exit 1
+fi 
 
 mkdir "${TARGET}/conf"
 mkdir "${TARGET}/logs"
