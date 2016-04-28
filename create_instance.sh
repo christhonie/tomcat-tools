@@ -13,10 +13,12 @@ usage() {
   echo "Usage: $PROG [options] <directoryname>"
   echo "  directoryname: name of the tomcat instance directory to create"
   echo "Options:"
-  echo "  -h, --help       Display this help message"
-  echo "  -p httpport      HTTP port to be used by Tomcat (default is $HPORT)"
-  echo "  -c controlport   Server shutdown control port (default is $CPORT)"
-  echo "  -w magicword     Word to send to trigger shutdown (default is $CWORD)"
+  echo "  -h, --help         Display this help message"
+  echo "  -t CATALINA_HOME   Set the CATALINE_HOME (Tomcat HOME) directory"
+  echo "  -j JAVA_HOME       Set the JAVA_HOME (Java JRE installation) directory"
+  echo "  -p httpport        HTTP port to be used by Tomcat (default is $HPORT)"
+  echo "  -c controlport     Server shutdown control port (default is $CPORT)"
+  echo "  -w magicword       Word to send to trigger shutdown (default is $CWORD)"
 }
 
 checkport() {
@@ -62,9 +64,10 @@ fi
 
 
 
-while getopts ":t:p:c:w:h" options; do
+while getopts ":t:j:p:c:w:h" options; do
   case $options in
     t ) TOMCAT_PATH=$OPTARG ;;
+    j ) JAVA_HOME=$OPTARG ;;
     p ) HPORT=$OPTARG ;;
     c ) CPORT=$OPTARG ;;
     w ) CWORD=$OPTARG ;;
@@ -107,20 +110,25 @@ if [ ${warned} -eq 1 ]; then
   read answer
 fi
 
-mkdir -p "${TARGET}"
-
-FULLTARGET=`cd "${TARGET}" > /dev/null && pwd`
 
 if [ -z "$TOMCAT_PATH" ]; then
   SCRIPTDIR=`dirname "$0"`
   TOMCAT_PATH=`cd "$SCRIPTDIR/.." >/dev/null; pwd`
-  echo "Using $TOMCAT_PATH as Tomcat BASE directory.  Use -t option to override."
+  echo "Assuming $TOMCAT_PATH as Tomcat HOME directory.  Use -t option to override."
 fi
 
 if [ ! -d $TOMCAT_PATH ]; then
-  echo "Error: Tomcat BASE directory not found."
+  echo "Error: Tomcat HOME directory not found (CATALINA_HOME)."
   exit 1
 fi 
+
+if [ ! -d $JAVA_HOME ] || [ ! -f "$JAVA_HOME/bin/java" ]; then
+  echo "Error: Java directory not found (JAVA_HOME)."
+  exit 1
+fi 
+
+mkdir -p "${TARGET}"
+FULLTARGET=`cd "${TARGET}" > /dev/null && pwd`
 
 mkdir "${TARGET}/conf"
 mkdir "${TARGET}/logs"
@@ -135,6 +143,7 @@ sed -i -e "s/Connector port=\"8080\"/Connector port=\"${HPORT}\"/;s/Server port=
 
 cat > "${TARGET}/bin/startup.sh" << EOT
 #!/bin/sh
+export JAVA_HOME="${JAVA_HOME}"
 export CATALINA_BASE="${FULLTARGET}"
 ${TOMCAT_PATH}/bin/startup.sh
 echo "Tomcat started"
@@ -142,6 +151,7 @@ EOT
 
 cat > "${TARGET}/bin/shutdown.sh" << EOT
 #!/bin/sh
+export JAVA_HOME="${JAVA_HOME}"
 export CATALINA_BASE="${FULLTARGET}"
 ${TOMCAT_PATH}/bin/shutdown.sh
 echo "Tomcat stopped"
