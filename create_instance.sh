@@ -146,7 +146,9 @@ fi
 
 # Check ports
 checkport HTTP "${HPORT}"
+checkport HTTPS "${SPORT}"
 checkport Control "${CPORT}"
+checkport AJP "${APORT}"
 
 if [ -z "$TOMCAT_PATH" ]; then
   SCRIPTDIR=`dirname "$0"`
