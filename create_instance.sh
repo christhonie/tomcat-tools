@@ -183,6 +183,7 @@ mkdir "${TARGET}/webapps"
 mkdir "${TARGET}/work"
 mkdir "${TARGET}/temp"
 mkdir "${TARGET}/bin"
+mkdir "${TARGET}/lib"
 cp -r "${TOMCAT_PATH}/conf"/* "${TARGET}/conf"
 cp -r "${TOMCAT_PATH}/webapps"/* "${TARGET}/webapps"
 
